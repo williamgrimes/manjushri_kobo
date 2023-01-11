@@ -11,7 +11,6 @@ KOBO_DB_PATH = Path("/home/will/KoboBooks/KoboReader.sqlite")
 
 word_len = 3
 
-PARTS_OF_SPEECH = ["noun", "verb", "adjective", "adverb"]
 
 wp = WiktionaryParser()
 
