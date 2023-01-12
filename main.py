@@ -5,8 +5,10 @@ import string
 import pandas as pd
 from wiktionaryparser import WiktionaryParser
 
-from shared_utils.db_utils import DBConnection, query_to_df
-from shared_utils.log_utils import get_logger
+from shared_utils.db_utils import KoboDB
+from shared_utils.log_utils import ProjectLogger
+
+logger = ProjectLogger(__name__)
 
 wp = WiktionaryParser()
 
@@ -68,14 +70,13 @@ def argparser():
 
 
 def main(**kwargs):
-    logger = get_logger(__name__, kwargs["logs_dir"])
-
-    with DBConnection(kwargs.get("kobo_db"), logger) as conn:
+    logger.log_location()
+    with KoboDB(kwargs.get("kobo_db")) as conn:
         cursor = conn.cursor()
 
-        df_books = query_to_df(cursor, kwargs.get("sql_books_read"))
+        df_books = KoboDB.query_to_df(cursor, kwargs.get("sql_books_read"))
 
-        df = query_to_df(
+        df = KoboDB.query_to_df(
             cursor, kwargs.get("sql_extract_annotations"))
 
         df["word_count"] = df["Text"].str.split(
