@@ -5,8 +5,8 @@ import string
 import pandas as pd
 from wiktionaryparser import WiktionaryParser
 
-from shared_utils.db_utils import KoboDB
-from shared_utils.log_utils import ProjectLogger
+from shared_utils.database import KoboDB
+from shared_utils.logs import ProjectLogger
 
 logger = ProjectLogger(__name__)
 
@@ -70,7 +70,7 @@ def argparser():
 
 
 def main(**kwargs):
-    logger.log_location()
+    logger.setup_info()
     with KoboDB(kwargs.get("kobo_db")) as conn:
         cursor = conn.cursor()
 

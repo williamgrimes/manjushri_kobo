@@ -1,11 +1,10 @@
 """Utility functions for interaction with sqlite database."""
-import logging
 import sqlite3
 from typing import Type
 
 import pandas as pd
 
-from shared_utils.log_utils import get_logger, ProjectLogger
+from shared_utils.logs import ProjectLogger
 
 logger = ProjectLogger(__name__)
 
@@ -18,12 +17,12 @@ class KoboDB:
 
     def __enter__(self) -> Type[sqlite3.Connection]:
         self.conn = sqlite3.connect(self.db_name)
-        logger.info(
+        logger.i(
             f"Connected to sqlite database: {self.db_name}")
         return self.conn
 
     def __exit__(self, exc_type: Type, exc_val: Type, exc_tb: Type) -> None:
-        logger.info(
+        logger.i(
             f"Closing sqlite connection: {self.db_name}")
         self.conn.close()
 
@@ -34,10 +33,11 @@ class KoboDB:
         """Run a query on database and return a pandas dataframe."""
         with open(query_path, 'r') as f:
             query_str = f.read()
+        logger.i(f"Query: {repr(query_str)}")
         cursor.execute(query_str)
         results = cursor.fetchall()
         columns = [col[0] for col in cursor.description]
         df = pd.DataFrame(results, columns=columns)
-        logger.info(f"Query:\n{query_str}\nReturned Dataframe with "
-                    f"{len(df)} rows and {len(df.columns)}.")
+        logger.i(
+            f"Returned Dataframe with {len(df)} rows and {len(df.columns)} columns.")
         return df
