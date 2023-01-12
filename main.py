@@ -1,39 +1,24 @@
 """Extract annotations, words and phrases from Kobo Ereader."""
 
-import sqlite3
 import string
 from pathlib import Path
 
 import pandas as pd
 from wiktionaryparser import WiktionaryParser
 
+from shared_utils.db_utils import DBConnection, query_to_df
+from shared_utils.log_utils import get_logger
+
+logger = get_logger(__name__)
+
 KOBO_DB_PATH = Path("/home/will/KoboBooks/KoboReader.sqlite")
+
+QUERY_BOOKS_READ_PATH = Path("sql/books_read.sql")
+QUERY_EXTRACT_ANNOTATIONS_PATH = Path("sql/extract_annotations.sql")
 
 word_len = 3
 
-
 wp = WiktionaryParser()
-
-QUERY_BOOKS = """
-  SELECT *
-  FROM content
-  WHERE ReadStatus == 2;
-  """
-
-QUERY_BOOKMARKS = """
-  SELECT
-  -- Bookmark.VolumeID,
-  Bookmark.Text,
-  Bookmark.Annotation,
-  Bookmark.ExtraAnnotationData,
-  Bookmark.DateCreated,
-  Bookmark.DateModified,
-  content.BookTitle,
-  content.Title,
-  content.Attribution
-  FROM Bookmark INNER JOIN content
-  ON Bookmark.VolumeID = content.ContentID;
-"""
 
 
 def clean_words_string(words_string: str) -> str:
@@ -67,36 +52,26 @@ def word_wiktionary(wp: WiktionaryParser,
     return word_dict
 
 
-def sqlite_query_to_pd(conn: sqlite3.Connection,
-                       QUERY: str,
-                       ) -> pd.DataFrame:
-    """Return pandas dataframe of a SQLite Query."""
-    cursor = conn.cursor()
-    cursor.execute(QUERY)
-    results = cursor.fetchall()
-    columns = [col[0] for col in cursor.description]
-    df = pd.DataFrame(results, columns=columns)
-    print(f"Query:\n{QUERY}\nReturned Dataframe with "
-          f"{len(df)} rows and {len(df.columns)}.")
-    return df
-
-
 if __name__ == '__main__':
-    conn = sqlite3.connect(KOBO_DB_PATH)
+    with DBConnection(KOBO_DB_PATH) as conn:
+        cursor = conn.cursor()
 
-    df_books = sqlite_query_to_pd(conn, QUERY_BOOKS)
+        df_books = query_to_df(cursor, QUERY_BOOKS_READ_PATH)
 
-    df_bookmarks = sqlite_query_to_pd(conn, QUERY_BOOKMARKS)
+        df_annotations = query_to_df(
+            cursor, QUERY_EXTRACT_ANNOTATIONS_PATH)
 
-    words = [clean_words_string(s) for s in list(
-        df_bookmarks["Text"]) if len(s.split()) < word_len]
+        df_annotations["word_count"] = df_annotations["Text"].str.split(
+        ).str.len()
 
-    quotes = [s for s in list(df_bookmarks["Text"]) if len(s.split()) >= word_len]
+        words = [clean_words_string(s) for s in list(
+            df_annotations["Text"]) if len(s.split()) < word_len]
 
-    meanings = [word_wiktionary(wp, w) for w in words]
+        df_quotes = df_annotations.loc[df_annotations["Text"].str.split().apply(
+            len) > word_len]
 
-    words_dict = dict(zip(words, meanings))
+        meanings = [word_wiktionary(wp, w) for w in words]
 
-    df = pd.DataFrame(words_dict).head()
+        words_dict = dict(zip(words, meanings))
 
-    conn.close()
+        df = pd.DataFrame(words_dict)
