@@ -1,5 +1,6 @@
 """Extract annotations, words and phrases from Kobo Ereader."""
 
+import argparse
 import string
 from pathlib import Path
 
@@ -10,13 +11,6 @@ from shared_utils.db_utils import DBConnection, query_to_df
 from shared_utils.log_utils import get_logger
 
 logger = get_logger(__name__)
-
-KOBO_DB_PATH = Path("/home/will/KoboBooks/KoboReader.sqlite")
-
-QUERY_BOOKS_READ_PATH = Path("sql/books_read.sql")
-QUERY_EXTRACT_ANNOTATIONS_PATH = Path("sql/extract_annotations.sql")
-
-word_len = 3
 
 wp = WiktionaryParser()
 
@@ -52,26 +46,53 @@ def word_wiktionary(wp: WiktionaryParser,
     return word_dict
 
 
-if __name__ == '__main__':
-    with DBConnection(KOBO_DB_PATH) as conn:
+def argparser():
+    parser = argparse.ArgumentParser(
+        description="Kobo Extract Annotations.")
+    parser.add_argument("--kobo_db",
+                        default="/home/will/KoboBooks/KoboReader.sqlite",
+                        type=str,
+                        help="path to kobo sqlite database KoboReader.sqlite")
+    parser.add_argument("--min_word_len",
+                        default=3,
+                        type=int,
+                        help="number of words to differentiate a quote.")
+    parser.add_argument("--sql_books_read",
+                        default="sql/books_read.sql",
+                        type=str,
+                        help="path to sql query returning books read.")
+    parser.add_argument("--sql_extract_annotations",
+                        default="sql/extract_annotations.sql",
+                        type=str,
+                        help="path to sql query returning annotations.")
+    return parser.parse_args()
+
+
+def main(**kwargs):
+    with DBConnection(kwargs["kobo_db"]) as conn:
         cursor = conn.cursor()
 
-        df_books = query_to_df(cursor, QUERY_BOOKS_READ_PATH)
+        df_books = query_to_df(cursor, kwargs["sql_books_read"])
 
-        df_annotations = query_to_df(
-            cursor, QUERY_EXTRACT_ANNOTATIONS_PATH)
+        df = query_to_df(
+            cursor, kwargs["sql_extract_annotations"])
 
-        df_annotations["word_count"] = df_annotations["Text"].str.split(
+        df["word_count"] = df["Text"].str.split(
         ).str.len()
 
         words = [clean_words_string(s) for s in list(
-            df_annotations["Text"]) if len(s.split()) < word_len]
+            df["Text"]) if len(s.split()) < kwargs["min_word_len"]]
 
-        df_quotes = df_annotations.loc[df_annotations["Text"].str.split().apply(
-            len) > word_len]
+        df_quotes = df.loc[df["Text"].str.split().apply(
+            len) > kwargs["min_word_len"]]
 
         meanings = [word_wiktionary(wp, w) for w in words]
 
         words_dict = dict(zip(words, meanings))
 
         df = pd.DataFrame(words_dict)
+
+
+if __name__ == '__main__':
+    args = argparser()
+    main(**vars(args))
