@@ -4,7 +4,7 @@ from typing import Type
 
 import pandas as pd
 
-from shared_utils.logs import ProjectLogger
+from core.logs import ProjectLogger
 
 logger = ProjectLogger(__name__)
 
@@ -26,15 +26,14 @@ class KoboDB:
             f"Closing sqlite connection: {self.db_name}")
         self.conn.close()
 
-    def query_to_df(
-        cursor: sqlite3.Connection,
-        query_path: str,
-    ) -> pd.DataFrame:
+    @staticmethod
+    def run_query(cursor: sqlite3.Connection, query_path: str, ) -> pd.DataFrame:
         """Run a query on database and return a pandas dataframe."""
         with open(query_path, 'r') as f:
             query_str = f.read()
-        logger.i(f"Query: {repr(query_str)}")
         cursor.execute(query_str)
+        query_str = query_str.replace("\n", " ")
+        logger.i(f"Query: {query_str}")
         results = cursor.fetchall()
         columns = [col[0] for col in cursor.description]
         df = pd.DataFrame(results, columns=columns)

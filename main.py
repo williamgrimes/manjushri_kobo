@@ -1,12 +1,12 @@
 """Extract annotations, words and phrases from Kobo Ereader."""
-import argparse
 import string
 
 import pandas as pd
 from wiktionaryparser import WiktionaryParser
 
-from shared_utils.database import KoboDB
-from shared_utils.logs import ProjectLogger
+from core import argparser
+from core.database import KoboDB
+from core.logs import ProjectLogger
 
 logger = ProjectLogger(__name__)
 
@@ -44,43 +44,16 @@ def word_wiktionary(wp: WiktionaryParser,
     return word_dict
 
 
-def argparser():
-    parser = argparse.ArgumentParser(
-        description="Kobo Extract Annotations.")
-    parser.add_argument("--kobo_db",
-                        type=str,
-                        help="path to kobo sqlite database KoboReader.sqlite")
-    parser.add_argument("--logs_dir",
-                        default="logs/",
-                        type=str,
-                        help="folder containing logs.")
-    parser.add_argument("--min_word_len",
-                        default=3,
-                        type=int,
-                        help="number of words to differentiate a quote.")
-    parser.add_argument("--sql_books_read",
-                        default="sql/books_read.sql",
-                        type=str,
-                        help="path to sql query returning books read.")
-    parser.add_argument("--sql_extract_annotations",
-                        default="sql/extract_annotations.sql",
-                        type=str,
-                        help="path to sql query returning annotations.")
-    return parser.parse_args()
-
-
-def main(**kwargs):
+if __name__ == '__main__':
+    args = argparser.argparser()
+    kwargs = vars(args)
     logger.setup_info()
     with KoboDB(kwargs.get("kobo_db")) as conn:
         cursor = conn.cursor()
+        #df_books = KoboDB.run_query(cursor, kwargs.get("sql_books_read"))
 
-        df_books = KoboDB.query_to_df(cursor, kwargs.get("sql_books_read"))
-
-        df = KoboDB.query_to_df(
-            cursor, kwargs.get("sql_extract_annotations"))
-
-        df["word_count"] = df["Text"].str.split(
-        ).str.len()
+        df = KoboDB.run_query(cursor, kwargs.get("sql_extract_annotations"))
+        df["word_count"] = df["Text"].str.split().str.len()
 
         words = [clean_words_string(s) for s in list(
             df["Text"]) if len(s.split()) < kwargs.get("min_word_len")]
@@ -93,8 +66,3 @@ def main(**kwargs):
         words_dict = dict(zip(words, meanings))
 
         df = pd.DataFrame(words_dict)
-
-
-if __name__ == '__main__':
-    args = argparser()
-    main(**vars(args))
