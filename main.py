@@ -8,8 +8,6 @@ from wiktionaryparser import WiktionaryParser
 from shared_utils.db_utils import DBConnection, query_to_df
 from shared_utils.log_utils import get_logger
 
-logger = get_logger(__name__)
-
 wp = WiktionaryParser()
 
 
@@ -51,6 +49,10 @@ def argparser():
                         default="/home/will/KoboBooks/KoboReader.sqlite",
                         type=str,
                         help="path to kobo sqlite database KoboReader.sqlite")
+    parser.add_argument("--logs_dir",
+                        default="logs/",
+                        type=str,
+                        help="folder containing logs.")
     parser.add_argument("--min_word_len",
                         default=3,
                         type=int,
@@ -67,22 +69,24 @@ def argparser():
 
 
 def main(**kwargs):
-    with DBConnection(kwargs["kobo_db"]) as conn:
+    logger = get_logger(__name__, kwargs["logs_dir"])
+
+    with DBConnection(kwargs.get("kobo_db"), logger) as conn:
         cursor = conn.cursor()
 
-        df_books = query_to_df(cursor, kwargs["sql_books_read"])
+        df_books = query_to_df(cursor, kwargs.get("sql_books_read"))
 
         df = query_to_df(
-            cursor, kwargs["sql_extract_annotations"])
+            cursor, kwargs.get("sql_extract_annotations"))
 
         df["word_count"] = df["Text"].str.split(
         ).str.len()
 
         words = [clean_words_string(s) for s in list(
-            df["Text"]) if len(s.split()) < kwargs["min_word_len"]]
+            df["Text"]) if len(s.split()) < kwargs.get("min_word_len")]
 
         df_quotes = df.loc[df["Text"].str.split().apply(
-            len) > kwargs["min_word_len"]]
+            len) > kwargs.get("min_word_len")]
 
         meanings = [word_wiktionary(wp, w) for w in words]
 
