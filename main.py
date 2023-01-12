@@ -46,7 +46,6 @@ def argparser():
     parser = argparse.ArgumentParser(
         description="Kobo Extract Annotations.")
     parser.add_argument("--kobo_db",
-                        default="/home/will/KoboBooks/KoboReader.sqlite",
                         type=str,
                         help="path to kobo sqlite database KoboReader.sqlite")
     parser.add_argument("--logs_dir",
