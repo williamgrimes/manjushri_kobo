@@ -1,8 +1,6 @@
 """Extract annotations, words and phrases from Kobo Ereader."""
-
 import argparse
 import string
-from pathlib import Path
 
 import pandas as pd
 from wiktionaryparser import WiktionaryParser
