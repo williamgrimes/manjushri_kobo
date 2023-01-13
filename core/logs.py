@@ -1,5 +1,6 @@
 """Class to setup Logging for project."""
 import logging
+import os
 import sys
 from datetime import datetime
 from logging import FileHandler, StreamHandler
@@ -73,6 +74,9 @@ class ProjectLogger:
             self.i(
                 f"Initialising logger in debug mode.")
         else:
+            if not os.path.exists(self.log_dir):
+                self.i(f"{self.log_dir} does not exist, creating it.")
+                os.makedirs(self.log_dir)
             self.i(f"Initialising logger and writing to file: {self.log_file}")
         for number, handler in enumerate(self.logger.handlers):
             self.i(f"Handler {number}: {handler}")
