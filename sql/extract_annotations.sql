@@ -1,11 +1,11 @@
 SELECT
 -- Bookmark.VolumeID,
 Bookmark.Text,
---Bookmark.Annotation,
---Bookmark.ExtraAnnotationData,
+-- Bookmark.Annotation,
+-- Bookmark.ExtraAnnotationData,
 Bookmark.DateCreated,
 Bookmark.DateModified,
---content.BookTitle,
+-- content.BookTitle,
 content.Title,
 content.Attribution,
 content.DateLastRead
