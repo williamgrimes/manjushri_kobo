@@ -23,14 +23,15 @@ class ProjectLogger:
                  f"%(message)s"
 
     project_name = Path().cwd().parts[-1]
-    now = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     def __init__(self, logger_name: str, log_dir: str = "logs") -> None:
 
         self.logger = logging.getLogger(logger_name)
-        self.logger.setLevel(logging.DEBUG)
-
         self.active_debugger = debugger_is_active()
+        self.now = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.log_dir = log_dir
+
+        self.logger.setLevel(logging.DEBUG)
 
         formatter = logging.Formatter(ProjectLogger.log_format)
 
@@ -40,7 +41,10 @@ class ProjectLogger:
         self.logger.addHandler(stream_handler)
 
         if not self.active_debugger:
-            log_filename = f"{ProjectLogger.project_name}_{ProjectLogger.now}.log"
+            if not os.path.exists(self.log_dir):
+                self.i(f"{self.log_dir} does not exist, creating it.")
+                os.makedirs(self.log_dir)
+            log_filename = f"{ProjectLogger.project_name}_{self.now}.log"
             self.log_file = Path(log_dir, log_filename).absolute()
 
             file_handler = FileHandler(self.log_file)
@@ -74,9 +78,6 @@ class ProjectLogger:
             self.i(
                 f"Initialising logger in debug mode.")
         else:
-            if not os.path.exists(self.log_dir):
-                self.i(f"{self.log_dir} does not exist, creating it.")
-                os.makedirs(self.log_dir)
             self.i(f"Initialising logger and writing to file: {self.log_file}")
         for number, handler in enumerate(self.logger.handlers):
             self.i(f"Handler {number}: {handler}")
