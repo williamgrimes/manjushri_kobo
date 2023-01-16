@@ -1,4 +1,5 @@
 """Extract annotations, words and phrases from Kobo Ereader."""
+from typing import Tuple
 
 import pandas as pd
 
@@ -9,12 +10,24 @@ from core.logs import ProjectLogger
 logger = ProjectLogger(__name__)
 
 
-def split_words_and_quotes(df: pd.DataFrame, max_word_len: int, **kwargs) -> (pd.DataFrame, pd.DataFrame):
-    df["word_count"] = df["Text"].str.split().str.len()
-    mask = df['word_count'] <= max_word_len
-    df_words = df[mask].reset_index(drop=True).copy()
-    df_quotes = df[~mask].reset_index(drop=True).copy()
-    logger.i(f"Split df {len(df)} into df_words {len(df_words)} and quotes {len(df_quotes)}.")
+def split_words_and_quotes(df: pd.DataFrame,
+                           max_word_len: int,
+                           **kwargs) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Split dataframe into words and quotes based on word count
+
+    Parameters:
+    df (pd.DataFrame): The dataframe to be split
+    max_word_len (int): The maximum word length to be considered as a word
+    kwargs: Additional keyword arguments
+
+    Returns:
+    Tuple[pd.DataFrame, pd.DataFrame]: Tuple of dataframes - words and quotes
+    """
+    df = df.assign(word_count=df['Text'].str.split().str.len())
+    df_words = df.query('word_count <= @max_word_len').reset_index(drop=True)
+    df_quotes = df.query('word_count > @max_word_len').reset_index(drop=True)
+    logger.i(f"Splitting: {len(df)=} -> {len(df_words)=} and {len(df_quotes)=}.")
     return df_words, df_quotes
 
 

@@ -42,7 +42,7 @@ class ProjectLogger:
 
         if not self.active_debugger:
             if not os.path.exists(self.log_dir):
-                self.i(f"{self.log_dir} does not exist, creating it.")
+                self.d(f"{self.log_dir} does not exist, creating it.")
                 os.makedirs(self.log_dir)
             log_filename = f"{ProjectLogger.project_name}_{self.now}.log"
             self.log_file = Path(log_dir, log_filename).absolute()
@@ -54,7 +54,7 @@ class ProjectLogger:
 
     def d(self, message: str) -> None:
         """Debug log."""
-        self.logger.DEBUG(message)
+        self.logger.debug(message)
 
     def i(self, message: str) -> None:
         """Info log."""

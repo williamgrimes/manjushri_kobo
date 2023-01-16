@@ -27,16 +27,21 @@ class KoboDB:
         self.conn.close()
 
     @staticmethod
-    def run_query(cursor: sqlite3.Connection, query_path: str, ) -> pd.DataFrame:
+    def run_query(
+        cursor: sqlite3.Connection,
+        query_path: str,
+    ) -> pd.DataFrame:
         """Run a query on database and return a pandas dataframe."""
         with open(query_path, 'r') as f:
             query_str = f.read()
         cursor.execute(query_str)
         query_str = query_str.replace("\n", " ")
-        logger.i(f"Query: {query_str}")
+        logger.i("Running query...")
+        logger.i(f"{query_str}")
         results = cursor.fetchall()
         columns = [col[0] for col in cursor.description]
         df = pd.DataFrame(results, columns=columns)
         logger.i(
-            f"Returned Dataframe with {len(df)} rows and {len(df.columns)} columns.")
+            f"Returned dataframe: {len(df)} rows, "
+            f"{len(df.columns)} columns: {list(df.columns)}.")
         return df
