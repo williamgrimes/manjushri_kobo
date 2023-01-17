@@ -34,7 +34,7 @@ def split_words_and_quotes(df: pd.DataFrame,
 if __name__ == '__main__':
     args = argparser.argparser()
     kwargs = vars(args)
-    logger.setup_info()
+    logger.setup_info(kwargs)
     with KoboDB(kwargs.get("kobo_db")) as conn:
         cursor = conn.cursor()
 
