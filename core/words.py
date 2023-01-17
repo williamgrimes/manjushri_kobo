@@ -117,7 +117,7 @@ def write_words_to_anki_csv(
     logger.d(f"Format answers for Anki and enumerate definitions.")
 
     def _anki_formmater(answer):
-        lines_separator = "----------------------------------------"
+        lines_separator = "--------------------"
 
         def _format(i, a):
             a_str = f"\n{lines_separator}"
