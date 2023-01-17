@@ -11,6 +11,7 @@ def argparser():
     parser = argparse.ArgumentParser(
         description="Kobo Extract Annotations.")
     parser.add_argument("--kobo_db",
+                        required=True,
                         type=str,
                         help="Path to kobo sqlite database KoboReader.sqlite")
     parser.add_argument("--logs_dir",
@@ -26,6 +27,7 @@ def argparser():
                         type=str,
                         help="Path to sql query returning annotations.")
     parser.add_argument("--org_file",
+                        required=True,
                         type=Path,
                         help="Path to output book annotations..")
     parser.add_argument("--org_title",
@@ -45,7 +47,7 @@ def argparser():
                         type=str,
                         help="Visibility of org-file.")
     parser.add_argument("--anki_csv",
-                        default="anki_vocabulary.csv",
+                        required=True,
                         type=Path,
                         help="Path to anki csv output.")
     return parser.parse_args()
