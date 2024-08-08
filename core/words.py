@@ -120,21 +120,21 @@ def write_words_to_anki_csv(
         lines_separator = "--------------------"
 
         def _format(i, a):
-            a_str = f"\n{lines_separator}"
+            a_str = f"<br>{lines_separator}"
             a_str += f"<large> {i + 1} </large>"
-            a_str += f"{lines_separator}\n"
-            a_str += f"<em><b>\n{a['Definition']}</b> - ({a['Part of speech']})</em>"
+            a_str += f"{lines_separator}<br>"
+            a_str += f"<em><b><br>{a['Definition']}</b> - ({a['Part of speech']})</em>"
             if examples := a.get("Examples"):
                 a_str += "<small>"
-                a_str += f'<u>\n\nExamples:</u>\n'
+                a_str += f'<u><br><br>Examples:</u><br>'
                 for example in examples:
-                    a_str += f"<em>\"{example}\"</em>\n"
+                    a_str += f"<em>\"{example}\"</em><br>"
                 a_str += "</small>"
             return a_str
 
         answer_str = [_format(i, a) for i, a in enumerate(answer)]
         return f"\n".join(answer_str) + \
-            f"\n{lines_separator}---{lines_separator}"
+            f"<br>{lines_separator}---{lines_separator}"
 
     df_words["Answer"] = df_words["Answer"].apply(_anki_formmater)
 
